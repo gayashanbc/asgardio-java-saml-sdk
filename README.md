@@ -10,16 +10,15 @@ The WSO2 SAML SDK for Java enables software developers to integrate SAML based S
 1. WSO2 Identity Server and it's [prerequisites](https://is.docs.wso2.com/en/next/setup/installing-the-product/).
 
 A sample app for demonstrating SAML based SSO authentication, SLO and attribute retrieval is hosted at:
-https://github.com/wso2-extensions/identity-agent-sso/tree/master/resources/SampleApp
 
-You can download the pre-built SampleApp.war from https://github.com/wso2-extensions/identity-agent-sso/releases/latest
+### Running the Sample
 
-### Running the SampleApp
-
-In order to check SSO using SAML2, please follow these steps 
+Follow below steps to tryout SAML based SSO authentication, SLO and attribute retrieval funtionalities.
  
-1. Start the WSO2 IS. 
-2. Access WSO2 IS management console and create a service provider (ex:- sampleApp)
+1. Download the `SampleApp.war` from the [latest release].(https://github.com/wso2-extensions/identity-agent-sso/releases/latest)
+2. Deploy the application, `SampleApp.war` using Apache Tomcat.
+3. Start the WSO2 IS. 
+4. Access WSO2 IS management console and create a service provider (ex:- sampleApp)
    
    For the service provider, configure SAML2 Web SSO under Inbound Authentication Configuration. In this configuration,
    use following parameters and options,
@@ -41,10 +40,7 @@ In order to check SSO using SAML2, please follow these steps
    ![Claim Config](https://user-images.githubusercontent.com/15249242/90488235-38d45580-e159-11ea-8beb-52d6b5c35034.png)
 
        
-3. Deploy the application, `SampleApp.war` using Apache Tomcat.
-4. Try out the application by accessing the `http://localhost:8080/SampleApp/index.html`.
-
-   By default, the application runs on url `http://localhost:8080/SampleApp/`
+5. Try out the application by accessing the `http://localhost:8080/SampleApp/index.html`.
  
 
 ![Recordit GIF](http://g.recordit.co/IvrtWnDnZ8.gif)
@@ -67,30 +63,44 @@ For Linux/Mac OS, this file location is at `/etc/hosts`.
 
 ## How it works
 
-In the SampleApp sample, we have two pages. A landing page (index.html) which we have not secured, and a secondary
- page (home.jsp) which we have secured.
+### Classify secure resources, unsecured resources
 
-In the SampleApp.properties file in the `identity-agent-sso/resources/SampleApp/src/main/resources` directory, we
- have set the /SampleApp/index.html as the index page via the following property:
+In the SampleApp sample, we have two pages. A landing page (`index.html`) which we have not secured, and another page (`home.jsp`) which we have secured.
+
+In the SampleApp.properties file in the `identity-agent-sso/resources/SampleApp/src/main/resources` directory, we have set the /SampleApp/index.html as the unsecured index page  via the following property:
 
     IndexPage=/SampleApp/index.html
 
-Hence, the sso agent regards the index.html page as the landing page and would be added to the skipURIs. Then, the
- index page would be regarded as a page that is not secured.
+Hence, the sso agent regards the index.html page as the landing page. Then, the index page would be regarded as a page that is not secured. Also the same page is used as the page that user get redirected once the logout is done.
 
-When a SLO sequence is initiated, the sso agent would redirect the user to this exact page which is configured via
- the `IndexPage` property.
+By default, all other pages considered as secured pages. Hence `home.jsp` will be secured without any other configurations.
 
-In the **index.html** page of the SampleApp, we have added the action for the login button to trigger a SAML
- authentication:
+### Trigger authentication
+
+In the `index.html` page, we have added the action for the login button to trigger a SAML authentication:
 
 `<form method="post" action="samlsso?SAML2.HTTPBinding=HTTP-POST">`
 
-This would engage the SAML2SSOAgentFilter which is specified in the **web.xml** file in the `identity-agent-sso
+This would engage the SAML2SSOAgentFilter which is specified in the `web.xml` file in the `identity-agent-sso
 /resources/SampleApp/src/main/webapp/WEB-INF` directory, and redirect the user to the IdP authentication page.
 
-Upon successful authentication, the user would be redirected to the **home.jsp** page.
-In the **home.jsp** file, we have added the following to trigger a SLO flow:
+Upon successful authentication, the user would be redirected to the `home.jsp` page.
+
+### Retrive user attributes
+
+In the `home.jsp` file, we have added the following to get the user subject value and the user attributes refering the SDK API.
+
+```
+<%
+    LoggedInSessionBean sessionBean = (LoggedInSessionBean) session.getAttribute(SSOAgentConstants.SESSION_BEAN_NAME);
+    String subjectId = sessionBean.getSAML2SSO().getSubjectId();
+    Map<String, String> saml2SSOAttributes = sessionBean.getSAML2SSO().getSubjectAttributes();
+%>
+```
+
+### Trigger logout
+
+In the `home.jsp` file, we have added the following to trigger a SLO flow:
 
 ``<a href="logout?SAML2.HTTPBinding=HTTP-POST">Logout</a>``
 
@@ -103,7 +113,7 @@ Clicking on the logout link would trigger the SLO flow engaging the same filter 
 ### Getting Started
 
 These instructions will guide you on integrating SAML into your Java application with the WSO2 SAML SDK.
-This allows the developers to turn a Java application into a SP (Service Provider) that can be connected to an IdP
+This allows the developers to turn a Java application into a SAML SP (Service Provider) that can be connected to an IdP
  (Identity Provider) which can support the following main features among many others.
 
 - Single Sign-On (SSO) and Single Log-Out (SLO) (SP-Initiated and IdP-Initiated).
